@@ -229,6 +229,7 @@ function createBuildings(){
         const color=palettes[Math.floor(seeded(buildingNo+18)*palettes.length)];
         const facade=makeMat(color,0.84,0.02);
         const b=addBox(scene,x,h/2,z,w,h,d,facade,true,true);
+        obstacles.push({x:x,z:z,hw:w/2,hd:d/2});
         const base=addBox(scene,x,0.55,z,w+0.6,1.1,d+0.6,makeMat(0x6a6964),false,true);
         const roofMat=makeMat(0x53636a,0.8);
         addBox(scene,x,h+0.3,z,w+0.5,0.6,d+0.5,roofMat,false,true);
@@ -467,10 +468,13 @@ function updatePlayer(dt){
     yaw+=steer*dt*(0.75+Math.min(Math.abs(velocity)/18,1.7))*(velocity<0?-1:1);
     if(boost)nitro=Math.max(0,nitro-24*dt);else nitro=Math.min(100,nitro+8*dt);
     car.rotation.y=yaw;
+    const oldCarX=car.position.x, oldCarZ=car.position.z;
     car.position.x-=Math.sin(yaw)*velocity*dt;
     car.position.z-=Math.cos(yaw)*velocity*dt;
     car.position.x=THREE.MathUtils.clamp(car.position.x,-116,112);
     car.position.z=THREE.MathUtils.clamp(car.position.z,-116,116);
+    const carHit=obstacles.some(o=>Math.abs(car.position.x-o.x)<o.hw+1.45&&Math.abs(car.position.z-o.z)<o.hd+2.35);
+    if(carHit){car.position.x=oldCarX;car.position.z=oldCarZ;velocity*=-0.22;showToast('ATTENZIONE · OSTACOLO');}
     car.position.y=0;
     const target=car.position.clone();
     setCamera(dt,target,yaw);
@@ -488,10 +492,13 @@ function updatePlayer(dt){
     const forward=(keys.KeyW?1:0)-(keys.KeyS?1:0);
     const side=(keys.KeyD?1:0)-(keys.KeyA?1:0);
     const speed=(keys.ShiftLeft||keys.ShiftRight)?12:7;
+    const oldPlayerX=player.position.x, oldPlayerZ=player.position.z;
     const dir=new THREE.Vector3(side,0,-forward);
     if(dir.lengthSq()>0){dir.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),yaw);player.position.addScaledVector(dir,speed*dt);}
     player.position.x=THREE.MathUtils.clamp(player.position.x,-116,112);
     player.position.z=THREE.MathUtils.clamp(player.position.z,-116,116);
+    const playerHit=obstacles.some(o=>Math.abs(player.position.x-o.x)<o.hw+0.45&&Math.abs(player.position.z-o.z)<o.hd+0.45);
+    if(playerHit){player.position.x=oldPlayerX;player.position.z=oldPlayerZ;}
     player.rotation.y=Math.atan2(dir.x,dir.z)+Math.PI;
     setCamera(dt,player.position.clone(),0);
     updateDistrict(player.position.x,player.position.z);
