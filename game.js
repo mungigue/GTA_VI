@@ -44,6 +44,8 @@ function addBox(parent, x,y,z, sx,sy,sz, material, cast=false, receive=true){
   return m;
 }
 function seeded(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+// Alias used by the procedural-world generation in the standalone build.
+const rand = seeded;
 
 function initRenderer(){
   renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
