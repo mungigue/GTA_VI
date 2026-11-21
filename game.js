@@ -254,7 +254,7 @@ function createBuildings(){
         }
         if(buildingNo%5===1){
           const sign=createBillboard(b,buildingNo%2?'HOTEL CORAL':'PALM CLUB',buildingNo%2?'#8af6e0':'#ffa8bd');
-          sign.position.set(0,h*0.72,-d/2-0.09);
+          sign.position.set(0,h*0.24,-d/2-0.09);
         }
         if(buildingNo%3===0){
           addBox(scene,x+w*0.28,h*0.34,z-d/2-0.35,1.4,0.12,0.8,makeMat(0x48565a),false,false);
