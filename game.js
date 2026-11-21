@@ -148,7 +148,8 @@ function createRoads(){
     const h=addMesh(new THREE.PlaneGeometry(260,width),asphalt,scene,0,0.01,p);h.rotation.x=-Math.PI/2;
     const v=addMesh(new THREE.PlaneGeometry(width,260),asphalt,scene,p,0.012,0);v.rotation.x=-Math.PI/2;
     for(let t=-120;t<=120;t+=12){
-      addMesh(new THREE.PlaneGeometry(4,0.16),lineMat,scene,t,0.025,p);
+      const dash=addMesh(new THREE.PlaneGeometry(4,0.16),lineMat,scene,t,0.025,p);
+      dash.rotation.x=-Math.PI/2;
       const mark=addMesh(new THREE.PlaneGeometry(0.16,4),lineMat,scene,p,0.027,t);
       mark.rotation.x=-Math.PI/2;
     }
