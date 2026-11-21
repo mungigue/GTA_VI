@@ -150,7 +150,7 @@ function createRoads(){
     for(let t=-120;t<=120;t+=12){
       addMesh(new THREE.PlaneGeometry(4,0.16),lineMat,scene,t,0.025,p);
       const mark=addMesh(new THREE.PlaneGeometry(0.16,4),lineMat,scene,p,0.027,t);
-      mark.rotation.z=Math.PI/2;
+      mark.rotation.x=-Math.PI/2;
     }
     for(const side of [-1,1]){
       addMesh(new THREE.PlaneGeometry(260,0.13),whiteMat,scene,0,0.02,p+side*(width/2-0.8)).rotation.x=-Math.PI/2;
@@ -569,17 +569,13 @@ function pauseGame(){
   paused=true;pauseScreen.classList.remove('hidden');
 }
 function resumeGame(){
-  pauseScreen.classList.add('hidden');paused=false;clock.getDelta();animate();
+  pauseScreen.classList.add('hidden');paused=false;clock.getDelta();
 }
 
 $('play').addEventListener('click',startGame);
 $('pause').addEventListener('click',pauseGame);
 $('resume').addEventListener('click',resumeGame);
-$('restart').addEventListener('click',()=>{
-  pauseScreen.classList.add('hidden');boot.classList.remove('hidden');hud.classList.add('hidden');
-  if(renderer){renderer.dispose();}started=false;paused=true;velocity=0;nitro=100;missionIndex=0;traffic=[];oceanWaves=[];scene=null;
-  startGame();
-});
+$('restart').addEventListener('click',()=>location.reload());
 
 window.addEventListener('keydown',(e)=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
