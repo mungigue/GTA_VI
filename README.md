@@ -2,7 +2,7 @@
 
 Una vertical slice 3D giocabile per browser, con una città costiera procedurale più ampia, strade PBR, illuminazione ambientale HDR, mare animato, palme, facciate dettagliate, auto con carrozzeria arrotondata, traffico, obiettivi e minimappa.
 
-I materiali PBR dell'asfalto e l'illuminazione HDRI arrivano da **Poly Haven** (asset CC0). Il progetto è originale e indipendente: non include asset o contenuti ufficiali Rockstar Games.
+I materiali PBR dell'asfalto e l'illuminazione HDRI arrivano da **Poly Haven** (CC0). I modelli 3D del veicolo, del traffico e delle palme arrivano dalla libreria **Innerscene** (CC0): [sedan](https://www.innerscene.com/tools/library/3d-parts/sedan-car-42109739), [supercar](https://www.innerscene.com/tools/library/3d-parts/generic-mid-engine-supercar-73f252c5), [palma dettagliata](https://www.innerscene.com/tools/library/3d-parts/palm-detailed-a8777b8c). Il progetto è originale e indipendente: non include asset o contenuti ufficiali Rockstar Games.
 
 ## Avvio con un doppio clic (Windows)
 
@@ -51,4 +51,4 @@ Il veicolo è il punto di partenza. Per risalire, avvicinati all'auto e premi E.
 
 ## Stato del progetto
 
-**0.2.0 — Pre-alpha.** È una base giocabile con rendering PBR e una città procedurale molto più ampia. Non è ancora un gioco AAA fotorealistico: per arrivare a quel livello servono asset artistici dedicati, animazioni avanzate, fisica, audio, personaggi e molto altro.
+**0.2.0 — Pre-alpha.** Città ampliata, asfalto PBR, HDRI, modelli GLB CC0 per auto e palme, traffico, obiettivi e guida. È una base giocabile con asset reali, non ancora un gioco AAA fotorealistico: per arrivare a quel livello servono ulteriori ambienti e architetture fotogrammetriche, animazioni avanzate, fisica, audio, personaggi e missioni complete.
