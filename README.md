@@ -1,28 +1,28 @@
 # VICE COAST — browser open-world
 
-Una prima vertical slice 3D giocabile, costruita per funzionare nel browser. Il mondo è generato proceduralmente con Three.js: architettura costiera, boulevard, spiaggia, palme, insegne, illuminazione al tramonto, auto, obiettivi e minimappa.
+Una vertical slice 3D giocabile per browser, con una città costiera procedurale più ampia, strade PBR, illuminazione ambientale HDR, mare animato, palme, facciate dettagliate, auto con carrozzeria arrotondata, traffico, obiettivi e minimappa.
 
-> Progetto originale e indipendente: usa ambientazioni e geometrie create nel codice, non asset, marchi o contenuti ufficiali di Rockstar Games.
+I materiali PBR dell'asfalto e l'illuminazione HDRI arrivano da **Poly Haven** (asset CC0). Il progetto è originale e indipendente: non include asset o contenuti ufficiali Rockstar Games.
 
 ## Avvio con un doppio clic (Windows)
 
 1. Scarica la versione aggiornata della repository con **Code → Download ZIP** ed estrai la cartella.
 2. Nella cartella estratta fai doppio clic su **AVVIA_GIOCO.bat**.
-3. Si aprirà automaticamente il browser all'indirizzo locale. Premi **ENTRA IN CITTÀ**.
+3. Si aprirà automaticamente il browser su localhost. Premi **ENTRA IN CITTÀ**.
 
-**Non aprire index.html con doppio clic:** Chrome blocca i moduli JavaScript ES quando la pagina usa l'indirizzo `file://`. Il launcher avvia un piccolo server HTTP limitato a `127.0.0.1` (solo il tuo PC), necessario per caricare correttamente Three.js e `game.js`. Non richiede Python, Node.js o Visual Studio Code; Windows PowerShell è già incluso in Windows.
+**Non aprire `index.html` direttamente:** Chrome blocca i moduli JavaScript ES con `file://`. Il launcher avvia un piccolo server HTTP limitato a `127.0.0.1` (solo sul tuo PC). Non richiede Python, Node.js o Visual Studio Code; Windows PowerShell è già incluso in Windows.
 
-Per chiudere il gioco, torna alla finestra nera del launcher e premi **CTRL+C**.
+Per chiudere, torna alla finestra del launcher e premi **CTRL+C**.
 
-È necessaria una connessione Internet per caricare Three.js e i font. È consigliato Chrome, Edge o Firefox aggiornato con accelerazione hardware/WebGL attiva.
+È necessaria una connessione Internet per caricare Three.js, il materiale PBR dell'asfalto, l'HDRI e i font. È consigliato Chrome/Edge aggiornato con accelerazione hardware e WebGL attivi.
 
 ## Pubblicazione online con GitHub Pages
 
-La repository include un workflow che pubblica il gioco a ogni push su `main`. Per il primo avvio, abilita Pages una sola volta:
+La repository contiene un workflow per GitHub Pages. Per il primo utilizzo, abilita Pages:
 
 1. Apri **Settings → Pages**: https://github.com/mungigue/GTA_VI/settings/pages
 2. In **Build and deployment**, imposta **Source: GitHub Actions**.
-3. Apri Actions e attendi che **Deploy static game to GitHub Pages** termini con esito verde.
+3. Apri Actions e verifica che **Deploy static game to GitHub Pages** termini con esito verde.
 
 Dopo la pubblicazione, il gioco sarà disponibile a:
 
@@ -42,13 +42,13 @@ Il veicolo è il punto di partenza. Per risalire, avvicinati all'auto e premi E.
 
 ## Struttura
 
-- `index.html` — entry point, interfaccia e controllo per apertura file locale
+- `index.html` — entry point, menu e import map Three.js
 - `style.css` — HUD, menu, pausa e layout responsive
-- `game.js` — scena Three.js, città procedurale, veicoli, controlli e missioni
+- `game.js` — mondo 3D, città, veicoli, controlli e missioni
 - `AVVIA_GIOCO.bat` — launcher Windows con doppio clic
 - `avvia-gioco.ps1` — server HTTP locale limitato a localhost
-- `.github/workflows/deploy.yml` — pubblicazione automatica GitHub Pages
+- `.github/workflows/deploy.yml` — workflow GitHub Pages
 
 ## Stato del progetto
 
-**0.1.0 — Pre-alpha.** È una base giocabile e un primo mondo esplorabile, non ancora un prodotto AAA: fisica, collisioni, audio, personaggi, missioni e livello di dettaglio continueranno a essere ampliati.
+**0.2.0 — Pre-alpha.** È una base giocabile con rendering PBR e una città procedurale molto più ampia. Non è ancora un gioco AAA fotorealistico: per arrivare a quel livello servono asset artistici dedicati, animazioni avanzate, fisica, audio, personaggi e molto altro.
