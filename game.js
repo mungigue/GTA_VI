@@ -24,10 +24,10 @@ let velocity = 0, yaw = 0, nitro = 100, missionIndex = 0;
 let toastTimer = 0, frameCount = 0;
 const worldSize = 460;
 const missions = [
-  {title:'Un giro sul lungomare', copy:'Raggiungi il punto panoramico sulla costa.', pos:new THREE.Vector3(45,0,-70)},
-  {title:'Le luci del centro', copy:'Attraversa il cuore di Vice Coast.', pos:new THREE.Vector3(-72,0,-72)},
-  {title:'La strada per il porto', copy:'Scopri il lato industriale della città.', pos:new THREE.Vector3(76,0,65)},
-  {title:'La città è tua', copy:'Torna sul boulevard per concludere il giro.', pos:new THREE.Vector3(0,0,0)}
+  {title:'Un giro sul lungomare', copy:'Raggiungi il punto panoramico sulla costa.', pos:new THREE.Vector3(400,0,-200)},
+  {title:'Le luci del centro', copy:'Attraversa il cuore di Vice Coast.', pos:new THREE.Vector3(-100,0,-100)},
+  {title:'La strada per il porto', copy:'Scopri il lato industriale della città.', pos:new THREE.Vector3(400,0,200)},
+  {title:'La città è tua', copy:'Torna sul boulevard per concludere il giro.', pos:new THREE.Vector3(0,0,100)}
 ];
 
 function showError(message){
@@ -71,7 +71,7 @@ function initScene(){
   scene=new THREE.Scene();
   scene.background=new THREE.Color(0x91a4a8);
   scene.fog=new THREE.FogExp2(0xa9b9b6,0.00115);
-  camera=new THREE.PerspectiveCamera(68,window.innerWidth/window.innerHeight,0.1,1400);
+  camera=new THREE.PerspectiveCamera(68,window.innerWidth/window.innerHeight,0.1,1000000);
   camera.position.set(0,9,26);
   clock=new THREE.Clock();
 
@@ -332,6 +332,7 @@ function makeProceduralSurface(baseColor,seed,type){
   const tex=new THREE.CanvasTexture(c);
   tex.colorSpace=THREE.SRGBColorSpace;
   tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(type==='ground'?28:(type==='sand'?24:12),type==='ground'?28:(type==='sand'?24:12));
   tex.anisotropy=8;
   return tex;
 }
@@ -339,7 +340,10 @@ function makeProceduralMaterial(color,type,seed){
   const tex=makeProceduralSurface(color,seed,type);
   return new THREE.MeshStandardMaterial({map:tex,color:0xffffff,roughness:0.94});
 }
+const facadeTextureCache=new Map();
 function createFacadeTexture(seed,baseColor){
+  const cacheKey=String(baseColor);
+  if(facadeTextureCache.has(cacheKey))return facadeTextureCache.get(cacheKey);
   const c=document.createElement('canvas');c.width=512;c.height=1024;
   const ctx=c.getContext('2d');
   const col=new THREE.Color(baseColor);
@@ -392,6 +396,7 @@ function createFacadeTexture(seed,baseColor){
   tex.anisotropy=8;
   tex.minFilter=THREE.LinearMipmapLinearFilter;
   tex.magFilter=THREE.LinearFilter;
+  facadeTextureCache.set(cacheKey,tex);
   return tex;
 }
 function createBuildings(){
@@ -452,10 +457,8 @@ function createBuildings(){
           for(let f=1;f<floors;f+=2){
             const y=4+f*5.4;
             addBox(scene,x,y,frontZ-0.8,w*0.72,0.18,1.6,makeMat(0xd0c8b8,0.75),false,true);
-            addBox(scene,x,y+0.55,frontZ-1.48,w*0.72,0.08,0.08,makeMat(0x6d8587,0.4,0.6),false,false);
-            for(let rail=x-w*0.35;rail<=x+w*0.35;rail+=1.4){
-              addBox(scene,rail,y+0.3,frontZ-1.48,0.045,0.5,0.045,makeMat(0x708487,0.38,0.68),false,false);
-            }
+            addBox(scene,x,y+0.34,frontZ-1.48,w*0.72,0.58,0.055,new THREE.MeshPhysicalMaterial({color:0x9ebfc0,transparent:true,opacity:0.42,roughness:0.22,metalness:0.5}),false,false);
+            addBox(scene,x,y+0.63,frontZ-1.48,w*0.74,0.07,0.075,makeMat(0x84999a,0.3,0.68),false,false);
           }
         }
         if(buildingNo%4===1){
@@ -477,14 +480,12 @@ function createStreetFurniture(){
 
   for(let x=-400;x<=400;x+=100){
     for(let z=-400;z<=400;z+=100){
-      for(const sx of [-1,1]){
-        for(const sz of [-1,1]){
-          const px=x+sx*18,pz=z+sz*18;
-          const pole=addMesh(new THREE.CylinderGeometry(0.085,0.13,7.4,12),poleMat,scene,px,3.7,pz);
-          pole.castShadow=true;
-          addBox(scene,px+sx*1.35,7.15,pz,2.8,0.12,0.16,poleMat,false,false);
-          addMesh(new THREE.SphereGeometry(0.25,12,10),lampMat,scene,px+sx*2.6,6.85,pz);
-        }
+      {
+        const px=x+18,pz=z-18;
+        const pole=addMesh(new THREE.CylinderGeometry(0.085,0.13,7.4,12),poleMat,scene,px,3.7,pz);
+        pole.castShadow=true;
+        addBox(scene,px+1.35,7.15,pz,2.8,0.12,0.16,poleMat,false,false);
+        addMesh(new THREE.SphereGeometry(0.25,12,10),lampMat,scene,px+2.6,6.85,pz);
       }
       // Bus-stop benches and litter bins make the sidewalks feel inhabited.
       if((x+z)%200===0){
@@ -495,7 +496,7 @@ function createStreetFurniture(){
     }
   }
 
-  for(let z=-470;z<=470;z+=27){
+  for(let z=-470;z<=470;z+=42){
     createPalm(390,z,0.8+(seeded(z+800)*0.3));
     if(z%54===0)createPalm(376,z+13,0.66);
   }
@@ -598,7 +599,7 @@ function createPerson(){
 function createTraffic(){
   const colors=[0xc7c9c2,0x334d62,0x8f343e,0x9e9b8b,0x283d3b,0x777b7d,0x496a76,0x9b7347];
   const roads=[-300,-200,-100,0,100,200,300];
-  for(let i=0;i<18;i++){
+  for(let i=0;i<10;i++){
     const ai=createCar(colors[i%colors.length],0.72);
     const road=roads[i%roads.length];
     const dir=i%2===0?-1:1;
