@@ -5,7 +5,6 @@ import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { Sky } from 'three/addons/objects/Sky.js';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('world');
@@ -110,42 +109,56 @@ function initScene(){
   scene.add(bounce);
 }
 
+
 function createSkyline(){
-  const sky=new Sky();
-  sky.scale.setScalar(650000);
-  const uniforms=sky.material.uniforms;
-  uniforms['turbidity'].value=8.5;
-  uniforms['rayleigh'].value=2.2;
-  uniforms['mieCoefficient'].value=0.005;
-  uniforms['mieDirectionalG'].value=0.82;
-  const sunPosition=new THREE.Vector3();
-  sunPosition.setFromSphericalCoords(1,THREE.MathUtils.degToRad(84),THREE.MathUtils.degToRad(228));
-  uniforms['sunPosition'].value.copy(sunPosition);
-  skyDome=sky;
-  scene.add(sky);
+  // A lightweight gradient sky dome is compatible with both WebGPU and WebGL.
+  const skyCanvas=document.createElement('canvas');
+  skyCanvas.width=2048;skyCanvas.height=1024;
+  const ctx=skyCanvas.getContext('2d');
+  const gradient=ctx.createLinearGradient(0,0,0,1024);
+  gradient.addColorStop(0,'#35566d');
+  gradient.addColorStop(0.42,'#78939a');
+  gradient.addColorStop(0.72,'#e9ac93');
+  gradient.addColorStop(1,'#c87f78');
+  ctx.fillStyle=gradient;
+  ctx.fillRect(0,0,2048,1024);
+  for(let i=0;i<46;i++){
+    const x=seeded(i+401)*2048;
+    const y=170+seeded(i+501)*430;
+    const rx=35+seeded(i+601)*125;
+    const ry=7+seeded(i+701)*20;
+    const glow=ctx.createRadialGradient(x,y,2,x,y,rx);
+    glow.addColorStop(0,'rgba(255,225,205,0.22)');
+    glow.addColorStop(1,'rgba(255,225,205,0)');
+    ctx.fillStyle=glow;
+    ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();
+  }
+  const skyTexture=new THREE.CanvasTexture(skyCanvas);
+  skyTexture.colorSpace=THREE.SRGBColorSpace;
+  skyTexture.anisotropy=4;
+  skyDome=addMesh(
+    new THREE.SphereGeometry(850,48,32),
+    new THREE.MeshBasicMaterial({map:skyTexture,side:THREE.BackSide,depthWrite:false}),
+    scene
+  );
+  skyDome.renderOrder=-1000;
+  skyDome.userData.skipPathTracing=true;
 
-  const sunDisc=addMesh(new THREE.SphereGeometry(15,32,24),
-    new THREE.MeshBasicMaterial({color:0xffd5b2}),scene,-190,95,-360);
-  sunDisc.visible=false;
+  const sunDisc=addMesh(
+    new THREE.CircleGeometry(15,48),
+    new THREE.MeshBasicMaterial({color:0xffd2ad,transparent:true,opacity:0.9,side:THREE.DoubleSide}),
+    scene,-190,95,-360
+  );
+  sunDisc.lookAt(camera.position);
 
-  const distantMat=new THREE.MeshStandardMaterial({color:0x667a7d,roughness:0.95});
+  const distantMat=makeMat(0x667a7d,0.95);
   for(let i=0;i<90;i++){
     const x=-520+i*12;
     const h=22+seeded(i+601)*90;
     const w=7+seeded(i+711)*13;
-    const b=addBox(scene,x,h/2,-500-seeded(i+811)*65,w,h,12,distantMat,false,false);
-    b.castShadow=false;
+    addBox(scene,x,h/2,-500-seeded(i+811)*65,w,h,12,distantMat,false,false);
   }
-
-  const groundHaze=new THREE.Mesh(
-    new THREE.PlaneGeometry(1800,1800),
-    new THREE.MeshBasicMaterial({color:0xb5c0b7,transparent:true,opacity:0.045})
-  );
-  groundHaze.rotation.x=-Math.PI/2;
-  groundHaze.position.y=115;
-  scene.add(groundHaze);
 }
-
 function createOceanAndBeach(){
   const sandMap=makeProceduralSurface(0xd6c2a4,31,'sand');
   const sand= new THREE.MeshStandardMaterial({map:sandMap,roughness:0.98,color:0xe5d2b7});
