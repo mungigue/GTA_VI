@@ -16,7 +16,7 @@ let scene, camera, renderer, clock;
 let car, player, beacon, beaconRing, oceanWaves = [];
 let traffic = [];
 let windowsMesh;
-let roadMaterial, environmentTarget, sunLight;
+let roadMaterial, environmentTarget, sunLight, oceanSurface;
 const obstacles = [];
 const wheelRefs = []; // Edifici/ostacoli usati dal sistema di collisioni.
 let inCar = true, paused = true, started = false;
@@ -139,6 +139,7 @@ function createOceanAndBeach(){
   });
   const waterGeo=new THREE.PlaneGeometry(1000,1200,100,120);
   const water=addMesh(waterGeo,waterMat,scene,690,-0.42,0);
+  oceanSurface=water;
   water.rotation.x=-Math.PI/2;
   water.userData.basePositions=waterGeo.attributes.position.array.slice();
 
@@ -809,6 +810,16 @@ function updatePlayer(dt){
 }
 
 function updateWorld(dt,time){
+  if(oceanSurface && frameCount%3===0){
+    const position=oceanSurface.geometry.attributes.position;
+    const base=oceanSurface.userData.basePositions;
+    for(let i=0;i<position.count;i++){
+      const x=base[i*3],y=base[i*3+1];
+      position.array[i*3+2]=Math.sin(x*0.035+time*0.9)*0.18+Math.cos(y*0.028-time*0.7)*0.14;
+    }
+    position.needsUpdate=true;
+    oceanSurface.geometry.computeVertexNormals();
+  }
   if(beacon){
     beacon.children[0].material.opacity=0.1+Math.sin(time*2.3)*0.045;
     beaconRing.rotation.z+=dt*0.7;
