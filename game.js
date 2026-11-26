@@ -13,6 +13,7 @@ let scene, camera, renderer, clock;
 let car, player, beacon, beaconRing, oceanWaves = [];
 let traffic = [];
 let windowsMesh;
+const obstacles = []; // Edifici/ostacoli usati dal sistema di collisioni.
 let inCar = true, paused = true, started = false;
 let velocity = 0, yaw = 0, nitro = 100, missionIndex = 0;
 let toastTimer = 0, frameCount = 0;
