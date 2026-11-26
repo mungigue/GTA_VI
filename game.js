@@ -398,7 +398,7 @@ function createBuildings(){
   for(let ix=0;ix<blocks.length;ix++){
     for(let iz=0;iz<blocks.length;iz++){
       const bx=blocks[ix],bz=blocks[iz];
-      const count=seeded(ix*19+iz*43)>0.66?2:1;
+      const count=seeded(ix*19+iz*43)>0.91?2:1;
       for(let n=0;n<count;n++){
         const angle=seeded(buildingNo+22)*Math.PI*2;
         const offset=count===1?0:(n===0?-18:18);
@@ -422,37 +422,29 @@ function createBuildings(){
         // Deep plinth, cornice, roof parapet, vents and water tanks.
         addBox(scene,x,0.8,z,w+0.7,1.6,d+0.7,foundation,false,true);
         addBox(scene,x,h+0.22,z,w+0.8,0.42,d+0.8,makeMat(0x596361,0.78),true,true);
-        for(const sideSign of [-1,1]){
-          addBox(scene,x+sideSign*(w/2-0.22),h+0.75,z,w>32?0.26:0.18,0.95,d+0.5,makeMat(0xb8b5aa,0.8),false,true);
-          addBox(scene,x,h+0.75,z+sideSign*(d/2-0.22),w+0.5,0.95,0.18,makeMat(0xb8b5aa,0.8),false,true);
-        }
+        addBox(scene,x,h+0.58,z-d/2,w+0.4,0.62,0.22,makeMat(0xb8b5aa,0.8),false,true);
         const roofUnit=makeMat(0x76817e,0.75,0.18);
-        addBox(scene,x-w*0.18,h+1.25,z-d*0.12,w*0.24,1.4,d*0.22,roofUnit,false,true);
-        addBox(scene,x+w*0.2,h+0.8,z+d*0.18,3.2,0.9,2.5,roofUnit,false,true);
-        for(let ac=0;ac<2;ac++){
-          addBox(scene,x-w*0.16+ac*2,h+2.05,z-d*0.12,1.1,0.16,1.4,makeMat(0x4b5758,0.42,0.55),false,false);
-        }
+        addBox(scene,x-w*0.16,h+1.15,z-d*0.12,w*0.28,1.35,d*0.24,roofUnit,false,true);
 
         // Glass shopfront at street level, with metal mullions and canopy.
         const shopGlass=new THREE.MeshPhysicalMaterial({color:0x203c49,roughness:0.12,metalness:0.52,clearcoat:1,clearcoatRoughness:0.08});
         const frontZ=z-d/2-0.12;
         addBox(scene,x,2.2,frontZ,w*0.82,2.9,0.13,shopGlass,false,false);
-        for(let mull=x-w*0.37;mull<=x+w*0.38;mull+=3.2){
-          addBox(scene,mull,2.2,frontZ-0.09,0.075,2.95,0.08,makeMat(0xb8b7aa,0.36,0.65),false,false);
+        for(let mull=x-w*0.32;mull<=x+w*0.32;mull+=Math.max(5.5,w/3)){
+          addBox(scene,mull,2.2,frontZ-0.09,0.09,2.95,0.08,makeMat(0xb8b7aa,0.36,0.65),false,false);
         }
         addBox(scene,x,3.82,frontZ-0.28,w*0.9,0.2,0.85,makeMat(0xe1d7c5,0.65,0.12),false,true);
 
         // Selected towers receive real projecting balconies.
         if(buildingNo%3===0){
-          const floors=Math.floor(h/6);
+          const floors=Math.floor(h/18);
           for(let f=1;f<floors;f+=2){
-            const y=4+f*5.4;
-            addBox(scene,x,y,frontZ-0.8,w*0.72,0.18,1.6,makeMat(0xd0c8b8,0.75),false,true);
-            addBox(scene,x,y+0.34,frontZ-1.48,w*0.72,0.58,0.055,new THREE.MeshPhysicalMaterial({color:0x9ebfc0,transparent:true,opacity:0.42,roughness:0.22,metalness:0.5}),false,false);
-            addBox(scene,x,y+0.63,frontZ-1.48,w*0.74,0.07,0.075,makeMat(0x84999a,0.3,0.68),false,false);
+            const y=4+f*9.5;
+            addBox(scene,x,y,frontZ-0.72,w*0.72,0.18,1.45,makeMat(0xd0c8b8,0.75),false,true);
+            addBox(scene,x,y+0.34,frontZ-1.42,w*0.72,0.58,0.055,new THREE.MeshPhysicalMaterial({color:0x9ebfc0,transparent:true,opacity:0.42,roughness:0.22,metalness:0.5}),false,false);
           }
         }
-        if(buildingNo%4===1){
+        if(buildingNo%8===1){
           const sign=createBillboard(scene,buildingNo%2?'OCEAN HOTEL':'PALM RESIDENCES',buildingNo%2?'#b9fff0':'#ffc3a6');
           sign.position.set(x,Math.min(h-6,17),frontZ-0.7);
           sign.scale.set(1.1,1.1,1);
