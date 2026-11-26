@@ -97,5 +97,27 @@
       <div class="error-card"><strong>IL MONDO 3D NON È DISPONIBILE</strong><p id="error-message">Il browser potrebbe non supportare WebGL o il caricamento di Three.js.</p><button onclick="location.reload()">RIPROVA</button></div>
     </div>
   </div>
+
+  <script>
+    // I moduli JavaScript ES non possono essere caricati in modo affidabile da file://.
+    // Mostra istruzioni chiare: il launcher .bat serve il gioco da localhost.
+    if (window.location.protocol === 'file:') {
+      const bootScreen = document.getElementById('boot');
+      if (bootScreen) {
+        bootScreen.innerHTML = `
+          <div class="boot-top"><span class="brand-dot"></span> AVVIO LOCALE RICHIESTO</div>
+          <div class="boot-main">
+            <div class="eyebrow"><span></span> ULTIMO PASSAGGIO</div>
+            <h1>VICE<br><em>COAST</em></h1>
+            <p class="boot-copy">Non aprire index.html direttamente.<br>Chrome blocca i moduli 3D per sicurezza.</p>
+            <p style="max-width:520px;margin:20px 0;color:#b7c5ca;line-height:1.7">
+              Chiudi questa scheda. Nella cartella del gioco fai doppio clic su
+              <strong style="color:#8af6e0">AVVIA_GIOCO.bat</strong>.
+              Si aprirà automaticamente il browser con il gioco funzionante.
+            </p>
+          </div>`;
+      }
+    }
+  </script>
 </body>
 </html>
