@@ -8,3 +8,16 @@
 .pause-screen{z-index:8;background:rgba(8,14,19,.76);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center}.pause-panel{width:min(520px,88vw);padding:52px 54px;background:linear-gradient(145deg,rgba(27,43,52,.94),rgba(14,23,31,.96));border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 100px rgba(0,0,0,.4)}.pause-panel h2{font-size:clamp(76px,12vw,132px);margin:30px 0 20px}.pause-panel p{font-size:12px;color:#bfcdca;margin-bottom:28px}.text-button{display:block;border:0;background:none;color:#d6e0dd;font-size:9px;font-weight:800;letter-spacing:.17em;margin-top:20px;padding:6px 0;cursor:pointer}.text-button:hover{color:var(--pink)}.pause-help{font-size:8px;line-height:1.8;color:#829591;border-top:1px solid rgba(255,255,255,.12);padding-top:18px;margin-top:27px}
 .error-screen{z-index:10;background:#101920;display:flex;align-items:center;justify-content:center}.error-card{width:min(440px,90vw);padding:35px;background:#1b2b33;border:1px solid #41565b}.error-card strong{font:700 25px "Barlow Condensed",sans-serif}.error-card p{font-size:12px;line-height:1.7;color:#b4c4c2}.error-card button{padding:12px 20px;border:0;background:var(--cyan);font-weight:900;font-size:10px;cursor:pointer}
 @media(max-width:700px){.boot-top{top:22px;left:22px;font-size:7px}.boot-main{left:9vw}.boot-main h1{font-size:clamp(104px,29vw,170px)}.boot-copy{font-size:12px}.boot-side-note{right:7vw;bottom:13vh;font-size:10px}.boot-foot{right:-5vw;bottom:-11vh;gap:18px;font-size:6px}.hud-top{top:12px;left:12px;right:12px;gap:7px}.location-card{min-width:0;padding:0 10px;height:48px}.location-card strong{font-size:13px}.mission-card{width:190px;padding:9px 10px}.mission-card p{font-size:8px}.icon-button{width:38px;height:38px}.hud-bottom{left:12px;right:12px;bottom:12px}.minimap-wrap{width:112px}.minimap-wrap canvas{width:105px;height:105px}.map-coords{font-size:6px}.controls-hint{display:none}.speed-panel{width:90px}.speed-value{font-size:45px}.pause-panel{padding:35px 28px}}
+
+.raytrace-button{pointer-events:auto;height:44px;min-width:76px;padding:0 11px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid rgba(120,243,228,.35);color:#effbf8;background:rgba(10,20,27,.62);backdrop-filter:blur(12px);cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.raytrace-button b{font:900 13px "Barlow Condensed",sans-serif;letter-spacing:.1em;color:var(--cyan)}
+.raytrace-button small{font-size:7px;font-weight:900;letter-spacing:.14em;color:#c1d0cb}
+.raytrace-button:hover:not(:disabled){background:rgba(28,74,76,.82);border-color:var(--cyan);transform:translateY(-1px)}
+.raytrace-button.active{background:rgba(29,89,83,.88);border-color:var(--cyan);box-shadow:0 0 18px rgba(120,243,228,.16)}
+.raytrace-button:disabled{opacity:.5;cursor:not-allowed;filter:grayscale(.35)}
+
+@media(max-width:700px){
+  .raytrace-button{height:38px;min-width:58px;padding:0 8px;gap:5px}
+  .raytrace-button b{font-size:11px}
+  .raytrace-button small{font-size:6px}
+}
