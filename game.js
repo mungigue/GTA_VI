@@ -181,6 +181,7 @@ function createOceanAndBeach(){
   }
 }
 
+
 function createRoads(){
   roadMaterial=new THREE.MeshStandardMaterial({color:0xb1b4b0,roughness:0.92,metalness:0.02});
   const sidewalkMat=makeProceduralMaterial(0xb9b5aa,'concrete',43);
@@ -189,35 +190,23 @@ function createRoads(){
   const yellow=new THREE.MeshStandardMaterial({color:0xe9c36f,roughness:0.8});
   addBox(scene,0,-0.44,0,1020,0.28,1020,makeProceduralMaterial(0x998f7c,'ground',51),false,true);
 
+  const roadPositions=[];
   for(let k=-4;k<=4;k++){
     const p=k*100;
     const h=addMesh(new THREE.PlaneGeometry(1020,22),roadMaterial,scene,0,-0.25,p);h.rotation.x=-Math.PI/2;
     const v=addMesh(new THREE.PlaneGeometry(22,1020),roadMaterial,scene,p,-0.245,0);v.rotation.x=-Math.PI/2;
-
-    // Road edges and sidewalks with slight height variation.
     for(const side of [-1,1]){
       addBox(scene,0,-0.09,p+side*17,1020,0.28,9,sidewalkMat,false,true);
       addBox(scene,p+side*17,-0.09,0,9,0.28,1020,sidewalkMat,false,true);
       addBox(scene,0,0.08,p+side*12.2,1020,0.22,0.32,curbMat,false,true);
       addBox(scene,p+side*12.2,0.08,0,0.32,0.22,1020,curbMat,false,true);
     }
-
-    // Dashed lane markings.
-    for(let t=-490;t<=490;t+=14){
-      const dashH=addMesh(new THREE.PlaneGeometry(5,0.18),paint,scene,t,-0.225,p);
-      dashH.rotation.x=-Math.PI/2;
-      const dashV=addMesh(new THREE.PlaneGeometry(0.18,5),paint,scene,p,-0.22,t);
-      dashV.rotation.x=-Math.PI/2;
-    }
-    // Double yellow centre lines.
     for(const offset of [-0.48,0.48]){
       const lineH=addMesh(new THREE.PlaneGeometry(1020,0.12),yellow,scene,0,-0.22,p+offset);
       lineH.rotation.x=-Math.PI/2;
       const lineV=addMesh(new THREE.PlaneGeometry(0.12,1020),yellow,scene,p+offset,-0.215,0);
       lineV.rotation.x=-Math.PI/2;
     }
-
-    // Crosswalks at each intersection.
     for(let j=0;j<8;j++){
       const off=-8+j*2.2;
       addBox(scene,p+off,-0.19,p-15,1.15,0.055,4.3,paint,false,false);
@@ -225,74 +214,76 @@ function createRoads(){
       addBox(scene,p-15,-0.185,p+off,4.3,0.055,1.15,paint,false,false);
       addBox(scene,p+15,-0.185,p+off,4.3,0.055,1.15,paint,false,false);
     }
+    roadPositions.push(p);
   }
 
-  // Sidewalk squares and paving joints.
-  const jointMat=new THREE.MeshBasicMaterial({color:0x777c78,transparent:true,opacity:0.18});
-  for(let p=-400;p<=400;p+=25){
-    const joint=addMesh(new THREE.PlaneGeometry(8,0.035),jointMat,scene,p,-0.005,-400);
-    joint.rotation.x=-Math.PI/2;
-  }
-}
-
-function createPalm(x,z,scale=1){
-  const group=new THREE.Group();
-  group.position.set(x,0,z);
-  group.scale.setScalar(scale);
-  scene.add(group);
-
-  const bark=makeMat(0x7e6753,0.98);
-  const trunkCurve=new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0,0,0),
-    new THREE.Vector3(0.16,2.5,0),
-    new THREE.Vector3(0.42,5.4,0.03),
-    new THREE.Vector3(0.55,8.2,0.08)
-  ]);
-  const trunk=addMesh(new THREE.TubeGeometry(trunkCurve,22,0.36,10,false),bark,group);
-  trunk.castShadow=true;
-  for(let y=1.0;y<8.1;y+=0.46){
-    const ring=addMesh(new THREE.TorusGeometry(0.31-(y/8.2)*0.06,0.035,5,18),makeMat(0x594a3d,1),group,0.2+(y/8.2)*0.35,y,0.02);
-    ring.rotation.x=Math.PI/2;
-  }
-
-  const leafColors=[0x1e5d46,0x286c4f,0x347b58,0x477d5a];
-  for(let i=0;i<9;i++){
-    const angle=(i/9)*Math.PI*2;
-    const length=7.5+(i%3)*0.9;
-    const start=new THREE.Vector3(0.55,8.0,0.08);
-    const end=new THREE.Vector3(Math.cos(angle)*length,5.9+Math.sin(i*2)*0.5,Math.sin(angle)*length);
-    const mid=start.clone().lerp(end,0.52);
-    mid.y+=1.1;
-    const curve=new THREE.CatmullRomCurve3([start,mid,end]);
-    const rachis=addMesh(new THREE.TubeGeometry(curve,20,0.075,6,false),
-      makeMat(0x466b42,0.9),group);
-    rachis.castShadow=true;
-
-    const verts=[],indices=[];
-    for(let t=0.16;t<0.91;t+=0.075){
-      const center=curve.getPoint(t);
-      const tangent=curve.getTangent(t).normalize();
-      const side=new THREE.Vector3(-tangent.z,0,tangent.x).normalize();
-      const droop=(t*t)*1.65;
-      for(const sign of [-1,1]){
-        const bladeLen=(1.4+Math.sin(t*Math.PI)*0.65)*(0.9+(i%3)*0.12);
-        const base=center.clone().addScaledVector(side,sign*0.04);
-        const tip=base.clone().addScaledVector(side,sign*bladeLen).add(new THREE.Vector3(0,-droop,0));
-        const back=base.clone().lerp(tip,0.44).addScaledVector(tangent,0.28);
-        const n=verts.length/3;
-        verts.push(base.x,base.y,base.z,back.x,back.y,back.z,tip.x,tip.y,tip.z);
-        indices.push(n,n+1,n+2);
+  // Batched lane dashes: thousands of markings in one draw call, not thousands of meshes.
+  const dashGeo=new THREE.BoxGeometry(4.2,0.035,0.16);
+  const dashCount=roadPositions.length*49*4;
+  const dashes=new THREE.InstancedMesh(dashGeo,paint,dashCount);
+  const dummy=new THREE.Object3D();let index=0;
+  for(const p of roadPositions){
+    for(let t=-480;t<=480;t+=20){
+      for(const offset of [-5.8,5.8]){
+        dummy.position.set(t,-0.205,p+offset);dummy.rotation.set(0,0,0);dummy.updateMatrix();dashes.setMatrixAt(index++,dummy.matrix);
+        dummy.position.set(p+offset,-0.205,t);dummy.rotation.y=Math.PI/2;dummy.updateMatrix();dashes.setMatrixAt(index++,dummy.matrix);
       }
     }
-    const leafGeo=new THREE.BufferGeometry();
-    leafGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
-    leafGeo.setIndex(indices);
-    leafGeo.computeVertexNormals();
-    const leafMat=new THREE.MeshStandardMaterial({color:leafColors[i%leafColors.length],roughness:0.88,side:THREE.DoubleSide});
-    const leaves=addMesh(leafGeo,leafMat,group);
-    leaves.castShadow=true;
   }
-  addMesh(new THREE.SphereGeometry(0.6,16,12),makeMat(0x3f6645,0.9),group,0.5,8,0.08);
+  dashes.instanceMatrix.needsUpdate=true;scene.add(dashes);
+}
+function createPalm(x,z,scale=1){
+  const group=new THREE.Group();group.position.set(x,0,z);group.scale.setScalar(scale);scene.add(group);
+  const bark=makeMat(0x76604c,0.98);
+  const trunkCurve=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0,0,0),new THREE.Vector3(0.12,2.5,0),
+    new THREE.Vector3(0.34,5.5,0.04),new THREE.Vector3(0.48,8.2,0.08)
+  ]);
+  const trunk=addMesh(new THREE.TubeGeometry(trunkCurve,24,0.34,12,false),bark,group);
+  trunk.castShadow=true;
+
+  const leafVerts=[],leafIndices=[],branchVerts=[],branchIndices=[];
+  const leafMaterial=new THREE.MeshStandardMaterial({color:0x2f7655,roughness:0.91,side:THREE.DoubleSide});
+  const branchMaterial=makeMat(0x476c44,0.9);
+  function appendTube(targetVerts,targetIndices,geometry){
+    const pos=geometry.attributes.position.array,idx=geometry.index.array,offset=targetVerts.length/3;
+    for(let j=0;j<pos.length;j++)targetVerts.push(pos[j]);
+    for(let j=0;j<idx.length;j++)targetIndices.push(idx[j]+offset);
+    geometry.dispose();
+  }
+
+  for(let i=0;i<9;i++){
+    const angle=(i/9)*Math.PI*2,length=7.4+(i%3)*0.8;
+    const start=new THREE.Vector3(0.48,8.15,0.08);
+    const end=new THREE.Vector3(Math.cos(angle)*length,5.8+Math.sin(i*2)*0.45,Math.sin(angle)*length);
+    const mid=start.clone().lerp(end,0.52);mid.y+=1.1;
+    const curve=new THREE.CatmullRomCurve3([start,mid,end]);
+    appendTube(branchVerts,branchIndices,new THREE.TubeGeometry(curve,16,0.065,5,false));
+
+    for(let t=0.18;t<0.9;t+=0.07){
+      const center=curve.getPoint(t),tangent=curve.getTangent(t).normalize();
+      const side=new THREE.Vector3(-tangent.z,0,tangent.x).normalize();
+      const droop=t*t*1.75;
+      for(const sign of [-1,1]){
+        const bladeLen=(1.35+Math.sin(t*Math.PI)*0.8)*(0.9+(i%3)*0.12);
+        const base=center.clone().addScaledVector(side,sign*0.04);
+        const tip=base.clone().addScaledVector(side,sign*bladeLen).add(new THREE.Vector3(0,-droop,0));
+        const shoulder=base.clone().lerp(tip,0.48).addScaledVector(tangent,0.23);
+        const n=leafVerts.length/3;
+        leafVerts.push(base.x,base.y,base.z,shoulder.x,shoulder.y,shoulder.z,tip.x,tip.y,tip.z);
+        leafIndices.push(n,n+1,n+2);
+      }
+    }
+  }
+  const branchGeo=new THREE.BufferGeometry();
+  branchGeo.setAttribute('position',new THREE.Float32BufferAttribute(branchVerts,3));
+  branchGeo.setIndex(branchIndices);branchGeo.computeVertexNormals();
+  addMesh(branchGeo,branchMaterial,group).castShadow=true;
+  const leafGeo=new THREE.BufferGeometry();
+  leafGeo.setAttribute('position',new THREE.Float32BufferAttribute(leafVerts,3));
+  leafGeo.setIndex(leafIndices);leafGeo.computeVertexNormals();
+  addMesh(leafGeo,leafMaterial,group).castShadow=true;
+  addMesh(new THREE.SphereGeometry(0.58,14,10),makeMat(0x3e6645,0.92),group,0.46,8.05,0.08);
   return group;
 }
 function createBillboard(parent,text,color){
@@ -472,40 +463,42 @@ function createBuildings(){
   }
 }
 
+
 function createStreetFurniture(){
   const poleMat=makeMat(0x3c4849,0.38,0.72);
   const lampMat=new THREE.MeshStandardMaterial({color:0xffe2b9,emissive:0xffc98b,emissiveIntensity:2.2,roughness:0.22});
-  const benchWood=makeMat(0x806d58,0.86);
-  const benchMetal=makeMat(0x404f50,0.42,0.55);
+  const positions=[];
+  for(let x=-400;x<=400;x+=100)for(let z=-400;z<=400;z+=100)positions.push([x+18,3.7,z-18]);
 
-  for(let x=-400;x<=400;x+=100){
-    for(let z=-400;z<=400;z+=100){
-      {
-        const px=x+18,pz=z-18;
-        const pole=addMesh(new THREE.CylinderGeometry(0.085,0.13,7.4,12),poleMat,scene,px,3.7,pz);
-        pole.castShadow=true;
-        addBox(scene,px+1.35,7.15,pz,2.8,0.12,0.16,poleMat,false,false);
-        addMesh(new THREE.SphereGeometry(0.25,12,10),lampMat,scene,px+2.6,6.85,pz);
-      }
-      // Bus-stop benches and litter bins make the sidewalks feel inhabited.
-      if((x+z)%200===0){
-        addBox(scene,x+25,0.52,z+20,3.1,0.16,0.72,benchWood,false,false);
-        for(let leg of [-1,1])addBox(scene,x+25+leg*1.1,0.25,z+20,0.12,0.55,0.12,benchMetal,false,false);
-        addBox(scene,x+30,0.62,z+20,0.72,1.1,0.72,makeMat(0x53615d,0.55,0.32),false,true);
-      }
+  const dummy=new THREE.Object3D(),count=positions.length;
+  const poles=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.085,0.13,7.4,12),poleMat,count);
+  const arms=new THREE.InstancedMesh(new THREE.BoxGeometry(2.8,0.12,0.16),poleMat,count);
+  const bulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(0.25,12,10),lampMat,count);
+  for(let i=0;i<count;i++){
+    const [x,y,z]=positions[i];
+    dummy.position.set(x,y,z);dummy.rotation.set(0,0,0);dummy.updateMatrix();poles.setMatrixAt(i,dummy.matrix);
+    dummy.position.set(x+1.35,7.15,z);dummy.rotation.set(0,0,0);dummy.updateMatrix();arms.setMatrixAt(i,dummy.matrix);
+    dummy.position.set(x+2.6,6.85,z);dummy.updateMatrix();bulbs.setMatrixAt(i,dummy.matrix);
+  }
+  poles.instanceMatrix.needsUpdate=true;arms.instanceMatrix.needsUpdate=true;bulbs.instanceMatrix.needsUpdate=true;
+  poles.castShadow=true;scene.add(poles,arms,bulbs);
+
+  for(let x=-400;x<=400;x+=200){
+    for(let z=-400;z<=400;z+=200){
+      addBox(scene,x+25,0.52,z+20,3.1,0.16,0.72,makeMat(0x806d58,0.86),false,false);
+      addBox(scene,x+25,0.25,z+20,2.4,0.55,0.12,makeMat(0x404f50,0.42,0.55),false,false);
+      addBox(scene,x+30,0.62,z+20,0.72,1.1,0.72,makeMat(0x53615d,0.55,0.32),false,true);
     }
   }
 
-  for(let z=-470;z<=470;z+=42){
-    createPalm(390,z,0.8+(seeded(z+800)*0.3));
-    if(z%54===0)createPalm(376,z+13,0.66);
+  for(let z=-455;z<=455;z+=65){
+    createPalm(390,z,0.83+(seeded(z+800)*0.22));
+    if(z%130===0)createPalm(376,z+13,0.68);
   }
-  for(let z=-390;z<=390;z+=55){
-    createPalm(-390,z,0.75);
-    if(z%110===0)createPalm(345,z+18,0.7);
+  for(let z=-360;z<=360;z+=80){
+    createPalm(-390,z,0.74);
   }
 }
-
 function createCar(color=0xd34c68,scale=1){
   const group=new THREE.Group();
   group.scale.setScalar(scale);
@@ -697,21 +690,25 @@ function updateDistrict(x,z){
   $('coords').textContent=(25.7617-z*0.00006).toFixed(4)+'° N · '+(80.1918+x*0.00008).toFixed(4)+'° W';
 }
 
+
 function updateMinimap(x,z){
   const c=$('minimap'),ctx=c.getContext('2d');
   const w=c.width,h=c.height,cx=w/2,cy=h/2;
   ctx.clearRect(0,0,w,h);
   ctx.save();ctx.beginPath();ctx.arc(cx,cy,108,0,Math.PI*2);ctx.clip();
   ctx.fillStyle='#102c34';ctx.fillRect(0,0,w,h);
-  const scale=0.77;
-  ctx.strokeStyle='rgba(202,218,205,.52)';ctx.lineWidth=7;
-  for(let k=-2;k<=2;k++){
-    ctx.beginPath();ctx.moveTo(cx+(k*50-x)*scale,-20);ctx.lineTo(cx+(k*50-x)*scale,240);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(-20,cy+(k*50-z)*scale);ctx.lineTo(240,cy+(k*50-z)*scale);ctx.stroke();
+  const scale=0.205;
+  ctx.strokeStyle='rgba(202,218,205,.48)';ctx.lineWidth=5;
+  for(let k=-4;k<=4;k++){
+    ctx.beginPath();ctx.moveTo(cx+(k*100-x)*scale,-20);ctx.lineTo(cx+(k*100-x)*scale,240);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-20,cy+(k*100-z)*scale);ctx.lineTo(240,cy+(k*100-z)*scale);ctx.stroke();
   }
-  ctx.fillStyle='#2a9e9b';ctx.fillRect(cx+(110-x)*scale,0,28,220);
+  ctx.fillStyle='#2a7c7c';ctx.fillRect(cx+(410-x)*scale,0,12,220);
   ctx.fillStyle='rgba(255,209,173,.75)';
-  for(let i=0;i<20;i++){const px=cx+((i*29)%190-95-x*scale);const pz=cy+((i*47)%190-95-z*scale);ctx.fillRect(px,pz,3,3);}
+  for(let i=0;i<28;i++){
+    const px=cx+((i*29)%190-95-x*scale),pz=cy+((i*47)%190-95-z*scale);
+    ctx.fillRect(px,pz,2.5,2.5);
+  }
   const m=missions[missionIndex].pos;
   ctx.fillStyle='#ff83a8';ctx.beginPath();ctx.arc(cx+(m.x-x)*scale,cy+(m.z-z)*scale,5,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='rgba(255,131,168,.5)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx+(m.x-x)*scale,cy+(m.z-z)*scale,10,0,Math.PI*2);ctx.stroke();
@@ -719,8 +716,6 @@ function updateMinimap(x,z){
   ctx.fillStyle='#8ffff0';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(6,7);ctx.lineTo(0,4);ctx.lineTo(-6,7);ctx.closePath();ctx.fill();
   ctx.restore();
 }
-
-
 function setCamera(dt,target,rotation){
   const offset=new THREE.Vector3(Math.sin(rotation)*16,7.4,Math.cos(rotation)*16);
   if(!inCar)offset.set(0,5.4,10.5);
