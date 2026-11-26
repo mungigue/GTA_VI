@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Sky } from 'three/addons/objects/Sky.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,7 +19,8 @@ let traffic = [];
 let windowsMesh;
 let roadMaterial, environmentTarget, sunLight, oceanSurface;
 const obstacles = [];
-const wheelRefs = []; // Edifici/ostacoli usati dal sistema di collisioni.
+const wheelRefs = [];
+const palmGroups = []; // Edifici/ostacoli usati dal sistema di collisioni.
 let inCar = true, paused = true, started = false;
 let velocity = 0, yaw = 0, nitro = 100, missionIndex = 0;
 let toastTimer = 0, frameCount = 0;
@@ -233,7 +235,7 @@ function createRoads(){
   dashes.instanceMatrix.needsUpdate=true;scene.add(dashes);
 }
 function createPalm(x,z,scale=1){
-  const group=new THREE.Group();group.position.set(x,0,z);group.scale.setScalar(scale);scene.add(group);
+  const group=new THREE.Group();group.position.set(x,0,z);group.scale.setScalar(scale);scene.add(group);palmGroups.push(group);
   const bark=makeMat(0x76604c,0.98);
   const trunkCurve=new THREE.CatmullRomCurve3([
     new THREE.Vector3(0,0,0),new THREE.Vector3(0.12,2.5,0),
@@ -585,7 +587,7 @@ function createTraffic(){
   const colors=[0xc7c9c2,0x334d62,0x8f343e,0x9e9b8b,0x283d3b,0x777b7d,0x496a76,0x9b7347];
   const roads=[-300,-200,-100,0,100,200,300];
   for(let i=0;i<10;i++){
-    const ai=createCar(colors[i%colors.length],0.72);
+    const ai=createCar(colors[i%colors.length],0.9);
     const road=roads[i%roads.length];
     const dir=i%2===0?-1:1;
     const lane=(i%3===0?-4.2:4.2);
@@ -628,7 +630,82 @@ function createWorld(){
   createBeacon();
   loadRealisticAssets();
 }
+function prepareVehicleModel(source,targetLength=4.8){
+  const model=source.clone(true);
+  model.updateMatrixWorld(true);
+  let bounds=new THREE.Box3().setFromObject(model);
+  let size=bounds.getSize(new THREE.Vector3());
+  if(size.x>size.z)model.rotation.y=Math.PI/2;
+  model.updateMatrixWorld(true);
+  bounds.setFromObject(model);
+  size=bounds.getSize(new THREE.Vector3());
+  const length=Math.max(size.x,size.z);
+  const factor=targetLength/Math.max(length,0.001);
+  model.scale.setScalar(factor);
+  model.updateMatrixWorld(true);
+  bounds.setFromObject(model);
+  model.position.x-=(bounds.min.x+bounds.max.x)*0.5;
+  model.position.z-=(bounds.min.z+bounds.max.z)*0.5;
+  model.position.y-=bounds.min.y;
+  model.updateMatrixWorld(true);
+  model.traverse((obj)=>{
+    if(obj.isMesh){
+      obj.castShadow=true;
+      obj.receiveShadow=true;
+      if(Array.isArray(obj.material))obj.material.forEach(m=>{if(m){m.envMapIntensity=1.1;}});
+      else if(obj.material)obj.material.envMapIntensity=1.1;
+    }
+  });
+  return model;
+}
+function preparePalmModel(source){
+  const model=source.clone(true);
+  model.updateMatrixWorld(true);
+  let bounds=new THREE.Box3().setFromObject(model);
+  let size=bounds.getSize(new THREE.Vector3());
+  const factor=8.9/Math.max(size.y,0.001);
+  model.scale.setScalar(factor);
+  model.updateMatrixWorld(true);
+  bounds.setFromObject(model);
+  model.position.x-=(bounds.min.x+bounds.max.x)*0.5;
+  model.position.z-=(bounds.min.z+bounds.max.z)*0.5;
+  model.position.y-=bounds.min.y;
+  model.updateMatrixWorld(true);
+  model.traverse(obj=>{if(obj.isMesh){obj.castShadow=true;obj.receiveShadow=true;}});
+  return model;
+}
+function replaceVisual(target,template){
+  if(!target||!template)return;
+  target.children.forEach(child=>{child.visible=false;});
+  target.add(template.clone(true));
+}
+function loadCommunityModels(){
+  const gltfLoader=new GLTFLoader();
+  const sedanUrl='https://files.innerscene.com/library/sedan-car-42109739/75c64c1b3c8b03734314/sedan-original.glb';
+  const supercarUrl='https://files.innerscene.com/library/generic-mid-engine-supercar-73f252c5/b41b620d8a8890b1b70a/generic-mid-engine-supercar.glb';
+  const palmUrl='https://files.innerscene.com/library/palm-detailed-a8777b8c/6c1f074e83cdb7dbaeae/palm-detailed.glb';
+
+  gltfLoader.load(supercarUrl,(gltf)=>{
+    const template=prepareVehicleModel(gltf.scene,4.85);
+    replaceVisual(car,template);
+  },undefined,(err)=>console.warn('Modello supercar non disponibile: uso il veicolo di riserva.',err));
+
+  gltfLoader.load(sedanUrl,(gltf)=>{
+    const template=prepareVehicleModel(gltf.scene,4.7);
+    traffic.forEach(item=>replaceVisual(item.mesh,template));
+  },undefined,(err)=>console.warn('Modello berlina non disponibile: uso i veicoli di riserva.',err));
+
+  gltfLoader.load(palmUrl,(gltf)=>{
+    const template=preparePalmModel(gltf.scene);
+    palmGroups.forEach(group=>{
+      group.children.forEach(child=>{child.visible=false;});
+      group.add(template.clone(true));
+    });
+  },undefined,(err)=>console.warn('Modello palma non disponibile: uso la palma procedurale.',err));
+}
+
 function loadRealisticAssets(){
+  loadCommunityModels();
   const loader=new THREE.TextureLoader();
   const textureOptions=(tex,repeatX,repeatY)=>{tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(repeatX,repeatY);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex;};
   loader.load('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_diff_1k.jpg',(tex)=>{
