@@ -19,9 +19,9 @@ Per chiudere, torna alla finestra del launcher e premi **CTRL+C**.
 Durante la guida il gioco usa il renderer WebGPU con fallback WebGL 2, ombre, materiali fisici e risoluzione adattiva per privilegiare la fluidità.
 
 Premi **P** oppure il pulsante **RT FOTO** per avviare la modalità path tracing:
-- costruisce una BVH della scena sul GPU path tracer;
+- costruisce una struttura BVH della scena con worker dedicati;
 - traccia raggi per riflessioni e trasporto della luce;
-- accumula progressivamente fino a 64 campioni;
+- accumula progressivamente fino a 96 campioni;
 - ferma la simulazione mentre la vista viene calcolata, per non rallentare la guida.
 
 Questa modalità richiede un browser con **WebGPU** e una GPU compatibile. Se WebGPU non è disponibile, il gioco continua in modalità PBR/WebGL 2 e il pulsante RT resta disabilitato. Il path tracing è una modalità statica/cinematica, non un ray tracing continuo mentre l'auto si muove.
@@ -58,4 +58,4 @@ In **Build and deployment**, imposta **Source: GitHub Actions**. Dopo che il wor
 
 ## Stato del progetto
 
-**0.3.0 — Pre-alpha.** Renderer WebGPU, modalità path tracing statica, auto in scala reale e orientamento corretto, edifici e strade ottimizzati. Non è ancora un gioco AAA: i modelli e la città sono una base giocabile che continuerà a richiedere asset ambientali più dettagliati, animazioni, fisica, audio, personaggi e missioni complete.
+**0.3.1 — Pre-alpha.** Renderer WebGPU, modalità path tracing statica, auto in scala reale e orientamento corretto, edifici e strade ottimizzati. Non è ancora un gioco AAA: i modelli e la città sono una base giocabile che continuerà a richiedere asset ambientali più dettagliati, animazioni, fisica, audio, personaggi e missioni complete.
