@@ -13,8 +13,14 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+        "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+        "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.webgpu.js",
+        "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.tsl.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/",
+        "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.10.0/src/index.js",
+        "three-mesh-bvh/worker": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.10.0/src/workers/index.js",
+        "three-mesh-bvh/webgpu": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.10.0/src/webgpu/index.js",
+        "three-gpu-pathtracer/": "https://cdn.jsdelivr.net/npm/three-gpu-pathtracer@0.0.28/src/"
       }
     }
   </script>
@@ -32,9 +38,9 @@
         <h1>VICE<br><em>COAST</em></h1>
         <p class="boot-copy">Una città. Infinite strade.<br>La notte è appena cominciata.</p>
         <button id="play" class="play-button"><span>ENTRA IN CITTÀ</span><b>↗</b></button>
-        <div class="boot-foot"><span>ESPERIENZA 3D PER BROWSER</span><span>BUILD 0.2.0 · PBR CITY</span></div>
+        <div class="boot-foot"><span>ESPERIENZA 3D PER BROWSER</span><span>BUILD 0.3.0 · WEBGPU RAY TRACING</span></div>
       </div>
-      <div class="boot-side-note">SUNSET<br>STATE<br>25° 46' N<br><span style="font-size:8px;letter-spacing:.1em;color:#8af6e0">PBR · HDR</span></div>
+      <div class="boot-side-note">SUNSET<br>STATE<br>25° 46' N<br><span style="font-size:8px;letter-spacing:.1em;color:#8af6e0">PBR · HDR · RT</span></div>
     </div>
 
     <div id="loading" class="loading-screen hidden">
@@ -55,6 +61,7 @@
           <p id="mission-copy">Raggiungi il punto panoramico sulla costa.</p>
           <div class="mission-progress"><i id="mission-progress"></i></div>
         </div>
+        <button id="raytrace" class="raytrace-button" type="button" title="Modalità path tracing GPU reale"><b>RT</b><small>FOTO</small></button>
         <button id="pause" class="icon-button" aria-label="Pausa">Ⅱ</button>
       </div>
 
@@ -69,7 +76,7 @@
           <span><kbd>SHIFT</kbd> TURBO</span>
           <span><kbd>SPACE</kbd> FRENO A MANO</span>
           <span><kbd>E</kbd> SCENDI</span>
-          <span><kbd>ESC</kbd> PAUSA</span>
+          <span><kbd>ESC</kbd> PAUSA</span><span><kbd>P</kbd> RAY TRACING FOTO</span>
         </div>
         <div class="speed-panel">
           <div class="speed-top"><span id="gear">D</span><small>KM/H</small></div>
