@@ -813,7 +813,13 @@ function replaceVisual(target,template){
   const visual=template.clone(true);
   const wheels=[];
   visual.traverse(obj=>{
-    if(obj!==visual&&/(wheel|tire|tyre|rim)/i.test(obj.name||''))wheels.push(obj);
+    if(obj===visual||!/(wheel|tire|tyre|rim)/i.test(obj.name||''))return;
+    let parent=obj.parent,hasWheelAncestor=false;
+    while(parent&&parent!==visual){
+      if(/(wheel|tire|tyre|rim)/i.test(parent.name||'')){hasWheelAncestor=true;break;}
+      parent=parent.parent;
+    }
+    if(!hasWheelAncestor)wheels.push(obj);
   });
   target.userData.modelWheels=wheels;
   target.add(visual);
