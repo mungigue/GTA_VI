@@ -22,7 +22,7 @@ let adaptivePixelRatio = 1, perfElapsed = 0, perfFrames = 0;
 let car, player, beacon, beaconRing, oceanWaves = [];
 let traffic = [];
 let windowsMesh;
-let roadMaterial, environmentTarget, sunLight, oceanSurface;
+let roadMaterial, roadVerticalMaterial, environmentTarget, sunLight, oceanSurface;
 const obstacles = [];
 const wheelRefs = [];
 const palmGroups = [];
@@ -70,7 +70,7 @@ async function initRenderer(){
     powerPreference: 'high-performance',
     outputBufferType: THREE.HalfFloatType
   });
-  adaptivePixelRatio = Math.min(window.devicePixelRatio || 1, 1.45);
+  adaptivePixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
   renderer.setPixelRatio(adaptivePixelRatio);
   renderer.setSize(window.innerWidth,window.innerHeight,false);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -216,6 +216,7 @@ function createOceanAndBeach(){
 
 function createRoads(){
   roadMaterial=new THREE.MeshStandardMaterial({color:0xb1b4b0,roughness:0.92,metalness:0.02});
+  roadVerticalMaterial=roadMaterial.clone();
   const sidewalkMat=makeProceduralMaterial(0xb9b5aa,'concrete',43);
   const curbMat=makeMat(0xd1c9bb,0.9);
   const paint=new THREE.MeshStandardMaterial({color:0xe7dfca,roughness:0.85});
@@ -233,7 +234,7 @@ function createRoads(){
 
     const h=addMesh(new THREE.PlaneGeometry(1020,width),roadMaterial,scene,0,-0.25,p);
     h.rotation.x=-Math.PI/2;
-    const v=addMesh(new THREE.PlaneGeometry(width,1020),roadMaterial,scene,p,-0.245,0);
+    const v=addMesh(new THREE.PlaneGeometry(width,1020),roadVerticalMaterial,scene,p,-0.245,0);
     v.rotation.x=-Math.PI/2;
 
     for(const side of [-1,1]){
@@ -516,7 +517,7 @@ function createBuildings(){
     }
   }
 
-  const unitBuilding=new RoundedBoxGeometry(1,1,1,2,0.006);
+  const unitBuilding=new THREE.BoxGeometry(1,1,1);
   const unitBox=new THREE.BoxGeometry(1,1,1);
   const dummy=new THREE.Object3D();
   for(let paletteIndex=0;paletteIndex<palettes.length;paletteIndex++){
@@ -809,7 +810,13 @@ function preparePalmModel(source){
 function replaceVisual(target,template){
   if(!target||!template)return;
   target.children.forEach(child=>{child.visible=false;});
-  target.add(template.clone(true));
+  const visual=template.clone(true);
+  const wheels=[];
+  visual.traverse(obj=>{
+    if(obj!==visual&&/(wheel|tire|tyre|rim)/i.test(obj.name||''))wheels.push(obj);
+  });
+  target.userData.modelWheels=wheels;
+  target.add(visual);
 }
 
 async function loadCommunityModels(){
@@ -854,23 +861,29 @@ function loadRealisticAssets(){
 
   const assetTasks=[loadCommunityModels()];
   assetTasks.push(loader.loadAsync('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_diff_1k.jpg').then(tex=>{
-    textureOptions(tex,45,45);
+    textureOptions(tex,85,2);
     roadMaterial.map=tex;
     roadMaterial.needsUpdate=true;
+    const vertical=tex.clone();vertical.repeat.set(2,85);vertical.needsUpdate=true;
+    roadVerticalMaterial.map=vertical;roadVerticalMaterial.needsUpdate=true;
   }));
   assetTasks.push(loader.loadAsync('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_nor_gl_1k.jpg').then(tex=>{
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
-    tex.repeat.set(45,45);
+    tex.repeat.set(85,2);
     tex.anisotropy=8;
     roadMaterial.normalMap=tex;
     roadMaterial.normalScale.set(0.65,0.65);
     roadMaterial.needsUpdate=true;
+    const vertical=tex.clone();vertical.repeat.set(2,85);vertical.needsUpdate=true;
+    roadVerticalMaterial.normalMap=vertical;roadVerticalMaterial.normalScale.set(0.65,0.65);roadVerticalMaterial.needsUpdate=true;
   }));
   assetTasks.push(loader.loadAsync('https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_01/asphalt_01_rough_1k.jpg').then(tex=>{
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
-    tex.repeat.set(45,45);
+    tex.repeat.set(85,2);
     roadMaterial.roughnessMap=tex;
     roadMaterial.needsUpdate=true;
+    const vertical=tex.clone();vertical.repeat.set(2,85);vertical.needsUpdate=true;
+    roadVerticalMaterial.roughnessMap=vertical;roadVerticalMaterial.needsUpdate=true;
   }));
   assetTasks.push(new RGBELoader().setDataType(THREE.HalfFloatType).loadAsync(
     'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/sunset_jhbcentral_1k.hdr'
@@ -986,7 +999,8 @@ function updatePlayer(dt){
     const oldCarX=car.position.x, oldCarZ=car.position.z;
     car.position.x-=Math.sin(yaw)*velocity*dt;
     car.position.z-=Math.cos(yaw)*velocity*dt;
-    if(car.userData.wheels)car.userData.wheels.forEach(w=>w.rotation.x-=velocity*dt/0.48);
+    if(car.userData.wheels)car.userData.wheels.forEach(w=>w.rotation.x-=velocity*dt/0.36);
+    if(car.userData.modelWheels)car.userData.modelWheels.forEach(w=>w.rotation.x-=velocity*dt/0.36);
     car.position.x=THREE.MathUtils.clamp(car.position.x,-440,440);
     car.position.z=THREE.MathUtils.clamp(car.position.z,-440,440);
     const carHit=obstacles.some(o=>Math.abs(car.position.x-o.x)<o.hw+1.45&&Math.abs(car.position.z-o.z)<o.hd+2.35);
@@ -1048,6 +1062,7 @@ function updateWorld(dt,time){
   oceanWaves.forEach((w,i)=>{w.position.z+=Math.sin(time*0.7+i)*dt*0.7;if(w.position.z>170)w.position.z=-170;});
   traffic.forEach(t=>{
     t.mesh.position.z+=t.dir*t.speed*dt;
+    if(t.mesh.userData.modelWheels)t.mesh.userData.modelWheels.forEach(w=>w.rotation.x-=t.dir*t.speed*dt/0.36);
     if(t.mesh.position.z>135)t.mesh.position.z=-135;
     if(t.mesh.position.z<-135)t.mesh.position.z=135;
   });
@@ -1061,8 +1076,8 @@ function tuneRenderResolution(dt){
   if(perfFrames<90)return;
   const avg=perfElapsed/perfFrames;
   let next=adaptivePixelRatio;
-  if(avg>0.022)next=Math.max(0.95,adaptivePixelRatio-0.12);
-  else if(avg<0.014)next=Math.min(Math.min(window.devicePixelRatio||1,1.45),adaptivePixelRatio+0.05);
+  if(avg>0.022)next=Math.max(0.78,adaptivePixelRatio-0.12);
+  else if(avg<0.014)next=Math.min(Math.min(window.devicePixelRatio||1,1.25),adaptivePixelRatio+0.05);
   if(Math.abs(next-adaptivePixelRatio)>0.02){
     adaptivePixelRatio=next;
     renderer.setPixelRatio(adaptivePixelRatio);
@@ -1160,10 +1175,10 @@ async function toggleRayTracing(){
     if(!rayTracer){
       rayTracer=new WebGPUPathTracer(renderer);
       rayTracer.setBVHWorker(GenerateMeshBVHWorker);
-      rayTracer.maxBounces=5;
-      rayTracer.frameBudget=85000;
-      rayTracer.renderScale=0.72;
-      rayTracer.maxSamples=64;
+      rayTracer.maxBounces=6;
+      rayTracer.frameBudget=70000;
+      rayTracer.renderScale=0.76;
+      rayTracer.maxSamples=96;
       rayTracer.addEventListener('progress',event=>{
         if(rayTracingBuilding&&event.stage==='building'){
           showToast('RAY TRACING · BVH '+Math.round(event.progress*100)+'%');
@@ -1175,7 +1190,7 @@ async function toggleRayTracing(){
     rayTracingBuilding=false;
     rayTracingActive=true;
     $('raytrace').innerHTML='<b>RT</b><small>ON</small>';
-    showToast('PATH TRACING GPU · 64 CAMPIONI');
+    showToast('PATH TRACING GPU · 96 CAMPIONI');
     requestAnimationFrame(renderRayTracingFrame);
   }catch(err){
     console.error('Ray tracing WebGPU non avviato:',err);
